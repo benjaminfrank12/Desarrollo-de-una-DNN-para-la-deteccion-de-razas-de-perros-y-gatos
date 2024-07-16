@@ -188,7 +188,16 @@ def main():
     if selected == "Subir imagen":
         subir_imagen()
 
+    if selected == "Usar camara":
+        usar_camara()
+
+
 def inicio():
+    html_classes = [get_class_html(cls, detected_classes) for cls in classes]
+    text_placeholder = st.empty()
+    text_placeholder.markdown(
+        f"<div style='padding:4px; border: 2px solid #FF4B4B; border-radius: 10px;'><h4 style='color:#FF4B4B;text-align:center;'>5 Clases</h4><p style='color:white;text-align:center;'>{' '.join(html_classes)}</p></div>",
+        unsafe_allow_html=True)
     img = Image.open(r"img.png")
     st.image(img)
 
@@ -200,32 +209,35 @@ def subir_imagen():
     text_placeholder.markdown(
         f"<div style='padding:4px; border: 2px solid #FF4B4B; border-radius: 10px;'><h4 style='color:#FF4B4B;text-align:center;'>5 Clases</h4><p style='color:white;text-align:center;'>{' '.join(html_classes)}</p></div>",
         unsafe_allow_html=True)
-    change_text = st.checkbox("Objetos Detectados")
+    change_text = st.checkbox("Objetos Detectados",value=True)
     image = st.file_uploader('Sube imagen', type=['png', 'jpg', 'jpeg', 'gif'])
-
+    #confidence_slider = st.slider('Confidence', min_value=0.0, max_value=1.0, value=0.25)
     if image:
-        col1, col2, col3 = st.columns([1, 1, 1])
-        col1.image(image, caption='Imagen original',
-                   use_column_width=True)  # Ajusta el uso del ancho de la columna
+        #col1.image(image, caption='Imagen original', use_column_width=True)
+        # Procesar la imagen y realizar anotaciones
         if model:
-            with col2:
-                with st.spinner('Procesando imagen...'):
-                    results = asyncio.run(process_image(image, model, confidence_slider))
-                    if results:
-                        annotated_frame = results[0].plot()
-                        annotated_frame = cv2.cvtColor(annotated_frame, cv2.COLOR_RGB2BGR)
-                        col2.image(annotated_frame, caption='Imagen anotada',
-                                   use_column_width=True)  # Ajusta el uso del ancho de la columna
-                        for result in results[0].boxes:
-                            idx = int(result.cls.cpu().numpy()[0])
-                            confidence = result.conf.cpu().numpy()[0]
-                            detected_class = classes[idx]
-                            detected_classes.add(detected_class)
-                            col3.markdown(
-                                f"<div style='background-color:#f0f0f0;padding:5px;border-radius:5px;margin:5px 0; color:black;'><b>Clase:</b> <span style='color:black'>{detected_class}</span><br><b>Confianza:</b> {confidence:.2f}<br></div>",
-                                unsafe_allow_html=True)
-                    else:
-                        col3.write("No se detectaron objetos.")
+            with st.spinner('Procesando imagen...'):
+                col1, col2, col3 = st.columns([1, 1, 1])
+                results = asyncio.run(process_image(image, model, confidence_slider))
+
+                if results:
+                    annotated_frame = results[0].plot()
+                    annotated_frame = cv2.cvtColor(annotated_frame, cv2.COLOR_RGB2BGR)
+
+                    # Mostrar la imagen anotada en la misma columna 1
+                    col1.image(annotated_frame, caption='Imagen anotada', use_column_width=True)
+
+                    for result in results[0].boxes:
+                        idx = int(result.cls.cpu().numpy()[0])
+                        confidence = result.conf.cpu().numpy()[0]
+                        detected_class = classes[idx]
+                        detected_classes.add(detected_class)
+
+                        col3.markdown(
+                            f"<div style='background-color:#f0f0f0;padding:5px;border-radius:5px;margin:5px 0; color:black;'><b>Clase:</b> <span style='color:black'>{detected_class}</span><br><b>Confianza:</b> {confidence:.2f}<br></div>",
+                            unsafe_allow_html=True)
+                else:
+                    col3.write("No se detectaron objetos.")
         else:
             st.error("Model is not loaded. Please check the logs for errors.")
     if change_text:
@@ -233,6 +245,17 @@ def subir_imagen():
         text_placeholder.markdown(
             f"<div style='padding:4px; border: 2px solid #FF4B4B; border-radius: 10px;'><h4 style='color:#FF4B4B;text-align:center;'>5 Clases</h4><p style='color:white;text-align:center;'>{' '.join(html_classes)}</p></div>",
             unsafe_allow_html=True)
+
+def usar_camara():
+    st.header("Utiliza tu cámara")
+    if model:
+        confidence_slider = st.sidebar.slider('Confidence', min_value=0.0, max_value=1.0, value=0.25)
+        start_detection = st.checkbox("Iniciar detección de objetos")
+        video_transformer = VideoTransformer()
+        if start_detection:
+            video_transformer.set_params(model, confidence_slider)
+        webrtc_streamer(key="example", video_transformer_factory=lambda: video_transformer,
+                        rtc_configuration={"iceServers": [{"urls": ["stun:stun.l.google.com:19302"]}]})
 
 
 if __name__ == "__main__":
