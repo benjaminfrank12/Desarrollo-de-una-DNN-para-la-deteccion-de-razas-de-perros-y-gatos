@@ -3,6 +3,7 @@ import numpy as np
 import cv2
 from ultralytics import YOLO
 from streamlit_webrtc import webrtc_streamer, VideoTransformerBase
+from streamlit_option_menu import option_menu
 import av
 from PIL import Image
 import gdown
@@ -100,7 +101,6 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-
 def download_model_from_gdrive(gdrive_url, output_path):
     gdown.download(gdrive_url, output_path, quiet=False, fuzzy=True)
 
@@ -177,33 +177,15 @@ def main():
     html_classesp = [get_class_html(cls, detected_classes) for cls in classes]
     st.markdown("<div class='title-op'><h4>Selecciona una opción</h4></div>", unsafe_allow_html=True)
 
-    col1, col2 = st.columns(2)
+    selected = option_menu(
+        menu_title=None,
+        options = ["Inicio", "Subir imagen", "Usar camara"],
+        icons = ['house-door-fill', 'file-earmark-image-fill', "webcam-fill"],
+        default_index=0,
+        orientation="horizontal",
+    )
 
-    # Crear botones con imágenes
-    with col1:
-        use_camera_button = st.markdown("""
-               <a href="#" class="button">
-                   <img class='card-image' src="https://st2.depositphotos.com/1915171/5331/v/450/depositphotos_53312473-stock-illustration-webcam-sign-icon-web-video.jpg" alt="Usar cámara">
-                   
-               </a>
-           """, unsafe_allow_html=True)
-
-    with col2:
-        upload_image_button = st.markdown("""
-               <a href="#" class="button">
-                   <img class='card-image' src="https://i.pinimg.com/736x/e1/91/5c/e1915cea845d5e31e1ec113a34b45fd8.jpg" alt="Subir imagen">
-                   
-               </a>
-           """, unsafe_allow_html=True)
-
-    btn1, btn2 = st.columns(2)
-    with btn1:
-        btn1_camera = st.button("Usar camara")
-
-    with btn2:
-        btn2_subir = st.button("Subir imagen")
-
-    if btn2_subir:
+    if selected == "Subir imagen":
         subir_imagen()
 
 
