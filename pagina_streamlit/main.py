@@ -108,7 +108,7 @@ def download_model_from_gdrive(gdrive_url, output_path):
 # Cache the model loading
 @st.cache_resource
 def load_model():
-    model_path = 'yolov9c-seg-10epochs.pt'  # Especifica la ruta a tu archivo de modelo
+    model_path = 'yolov9c-seg-50epochs.pt'  # Especifica la ruta a tu archivo de modelo
     if not os.path.exists(model_path):
         st.error(f"El archivo de modelo no se encuentra en la ruta especificada: {model_path}")
         return None
@@ -170,13 +170,6 @@ def create_card(title, image_url):
 
 def main():
     st.markdown("<h1 style='text-align: center;'>Detección de razas de perros y gatos</h1>", unsafe_allow_html=True)
-    img = Image.open(r"C:\Users\VECTOR\Documents\OD_APP_WEB\OD_APP_WEB\img1.png")
-    st.image(img)
-
-    # Añadir el título de la tabla
-    html_classesp = [get_class_html(cls, detected_classes) for cls in classes]
-    st.markdown("<div class='title-op'><h4>Selecciona una opción</h4></div>", unsafe_allow_html=True)
-
     selected = option_menu(
         menu_title=None,
         options = ["Inicio", "Subir imagen", "Usar camara"],
@@ -185,9 +178,19 @@ def main():
         orientation="horizontal",
     )
 
+
+    # Añadir el título de la tabla
+    html_classesp = [get_class_html(cls, detected_classes) for cls in classes]
+    #st.markdown("<div class='title-op'><h4>Selecciona una opción</h4></div>", unsafe_allow_html=True)
+    if selected == "Inicio":
+        inicio()
+
     if selected == "Subir imagen":
         subir_imagen()
 
+def inicio():
+    img = Image.open(r"img.png")
+    st.image(img)
 
 def subir_imagen():
     st.header("Subir imagen")
