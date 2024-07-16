@@ -3,6 +3,7 @@ import numpy as np
 import cv2
 from ultralytics import YOLO
 from streamlit_webrtc import webrtc_streamer, VideoTransformerBase
+from streamlit_option_menu import option_menu
 import av
 from PIL import Image
 import gdown
@@ -21,6 +22,7 @@ st.markdown("""
         flex-direction: column;
         justify-content: center;
         alingn-items: center;
+        margin: 10px;
     }
 
     .container{
@@ -69,7 +71,7 @@ st.markdown("""
             width: 300px;
             transition: all 0.3s;
             cursor: pointer;
-            margin: 20px;
+            
         }
         .button:hover {
             background-color: #7133FF;
@@ -78,9 +80,26 @@ st.markdown("""
             vertical-align: middle;
             margin-right: 10px;
         }
+        .stButton > button{
+            border: none;
+            color: black;
+            background-color: #f0f0f0;
+            text-align: center;
+            padding: 15px;
+            width: 300px;
+            transition: all 0.3s;
+            cursor: pointer;
+            border: 2px solid #FF4B4B; 
+        }
+        
+        .stButton > button:hover{
+            color: white;
+            background-color: #7133FF;
+            border: 2px solid #f0f0f0; 
+        }
+        
     </style>
 """, unsafe_allow_html=True)
-
 
 def download_model_from_gdrive(gdrive_url, output_path):
     gdown.download(gdrive_url, output_path, quiet=False, fuzzy=True)
@@ -158,66 +177,59 @@ def main():
     html_classesp = [get_class_html(cls, detected_classes) for cls in classes]
     st.markdown("<div class='title-op'><h4>Selecciona una opción</h4></div>", unsafe_allow_html=True)
 
-    col1, col2 = st.columns(2)
+    selected = option_menu(
+        menu_title=None,
+        options = ["Inicio", "Subir imagen", "Usar camara"],
+        icons = ['house-door-fill', 'file-earmark-image-fill', "webcam-fill"],
+        default_index=0,
+        orientation="horizontal",
+    )
 
-    # Crear botones con imágenes
-    with col1:
-        use_camera_button = st.markdown("""
-               <a href="#" class="button">
-                   <img class='card-image' src="https://st2.depositphotos.com/1915171/5331/v/450/depositphotos_53312473-stock-illustration-webcam-sign-icon-web-video.jpg" alt="Usar cámara">
-                   <div class='card-title'>Usar camara</div>
-               </a>
-           """, unsafe_allow_html=True)
+    if selected == "Subir imagen":
+        subir_imagen()
 
-    with col2:
-        upload_image_button = st.markdown("""
-               <a href="#" class="button">
-                   <img class='card-image' src="https://i.pinimg.com/736x/e1/91/5c/e1915cea845d5e31e1ec113a34b45fd8.jpg" alt="Subir imagen">
-                   <div class='card-title'>Subir imagen</div>
-               </a>
-           """, unsafe_allow_html=True)
 
-        if upload_image_button:
-            st.header("Subir imagen")
-            confidence_slider = st.sidebar.slider('Confidence', min_value=0.0, max_value=1.0, value=0.25)
-            html_classes = [get_class_html(cls, detected_classes) for cls in classes]
-            text_placeholder = st.empty()
-            text_placeholder.markdown(
-                f"<div style='padding:4px; border: 2px solid #FF4B4B; border-radius: 10px;'><h4 style='color:#FF4B4B;text-align:center;'>5 Clases</h4><p style='color:white;text-align:center;'>{' '.join(html_classes)}</p></div>",
-                unsafe_allow_html=True)
-            change_text = st.checkbox("Objetos Detectados")
-            image = st.file_uploader('Sube imagen', type=['png', 'jpg', 'jpeg', 'gif'])
+def subir_imagen():
+    st.header("Subir imagen")
+    confidence_slider = st.sidebar.slider('Confidence', min_value=0.0, max_value=1.0, value=0.25)
+    html_classes = [get_class_html(cls, detected_classes) for cls in classes]
+    text_placeholder = st.empty()
+    text_placeholder.markdown(
+        f"<div style='padding:4px; border: 2px solid #FF4B4B; border-radius: 10px;'><h4 style='color:#FF4B4B;text-align:center;'>5 Clases</h4><p style='color:white;text-align:center;'>{' '.join(html_classes)}</p></div>",
+        unsafe_allow_html=True)
+    change_text = st.checkbox("Objetos Detectados")
+    image = st.file_uploader('Sube imagen', type=['png', 'jpg', 'jpeg', 'gif'])
 
-            if image:
-                col1, col2, col3 = st.columns([1, 1, 1])
-                col1.image(image, caption='Imagen original',
-                           use_column_width=True)  # Ajusta el uso del ancho de la columna
-                if model:
-                    with col2:
-                        with st.spinner('Procesando imagen...'):
-                            results = asyncio.run(process_image(image, model, confidence_slider))
-                            if results:
-                                annotated_frame = results[0].plot()
-                                annotated_frame = cv2.cvtColor(annotated_frame, cv2.COLOR_RGB2BGR)
-                                col2.image(annotated_frame, caption='Imagen anotada',
-                                           use_column_width=True)  # Ajusta el uso del ancho de la columna
-                                for result in results[0].boxes:
-                                    idx = int(result.cls.cpu().numpy()[0])
-                                    confidence = result.conf.cpu().numpy()[0]
-                                    detected_class = classes[idx]
-                                    detected_classes.add(detected_class)
-                                    col3.markdown(
-                                        f"<div style='background-color:#f0f0f0;padding:5px;border-radius:5px;margin:5px 0; color:black;'><b>Clase:</b> <span style='color:black'>{detected_class}</span><br><b>Confianza:</b> {confidence:.2f}<br></div>",
-                                        unsafe_allow_html=True)
-                            else:
-                                col3.write("No se detectaron objetos.")
-                else:
-                    st.error("Model is not loaded. Please check the logs for errors.")
-            if change_text:
-                html_classes = [get_class_html(cls, detected_classes) for cls in classes]
-                text_placeholder.markdown(
-                    f"<div style='padding:4px; border: 2px solid #FF4B4B; border-radius: 10px;'><h4 style='color:#FF4B4B;text-align:center;'>5 Clases</h4><p style='color:white;text-align:center;'>{' '.join(html_classes)}</p></div>",
-                    unsafe_allow_html=True)
+    if image:
+        col1, col2, col3 = st.columns([1, 1, 1])
+        col1.image(image, caption='Imagen original',
+                   use_column_width=True)  # Ajusta el uso del ancho de la columna
+        if model:
+            with col2:
+                with st.spinner('Procesando imagen...'):
+                    results = asyncio.run(process_image(image, model, confidence_slider))
+                    if results:
+                        annotated_frame = results[0].plot()
+                        annotated_frame = cv2.cvtColor(annotated_frame, cv2.COLOR_RGB2BGR)
+                        col2.image(annotated_frame, caption='Imagen anotada',
+                                   use_column_width=True)  # Ajusta el uso del ancho de la columna
+                        for result in results[0].boxes:
+                            idx = int(result.cls.cpu().numpy()[0])
+                            confidence = result.conf.cpu().numpy()[0]
+                            detected_class = classes[idx]
+                            detected_classes.add(detected_class)
+                            col3.markdown(
+                                f"<div style='background-color:#f0f0f0;padding:5px;border-radius:5px;margin:5px 0; color:black;'><b>Clase:</b> <span style='color:black'>{detected_class}</span><br><b>Confianza:</b> {confidence:.2f}<br></div>",
+                                unsafe_allow_html=True)
+                    else:
+                        col3.write("No se detectaron objetos.")
+        else:
+            st.error("Model is not loaded. Please check the logs for errors.")
+    if change_text:
+        html_classes = [get_class_html(cls, detected_classes) for cls in classes]
+        text_placeholder.markdown(
+            f"<div style='padding:4px; border: 2px solid #FF4B4B; border-radius: 10px;'><h4 style='color:#FF4B4B;text-align:center;'>5 Clases</h4><p style='color:white;text-align:center;'>{' '.join(html_classes)}</p></div>",
+            unsafe_allow_html=True)
 
 
 if __name__ == "__main__":

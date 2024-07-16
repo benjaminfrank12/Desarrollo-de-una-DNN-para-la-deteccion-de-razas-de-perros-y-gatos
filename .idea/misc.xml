@@ -3,5 +3,5 @@
   <component name="Black">
     <option name="sdkName" value="Python 3.11 (streamlit_Deteccion_perros_gatos_yolov8_app)" />
   </component>
-  <component name="ProjectRootManager" version="2" project-jdk-name="Python 3.11 (streamlit_Deteccion_perros_gatos_yolov8_app)" project-jdk-type="Python SDK" />
+  <component name="ProjectRootManager" version="2" project-jdk-name="Python 3.12 (Deteccion_Dog_Cat)" project-jdk-type="Python SDK" />
 </project>
