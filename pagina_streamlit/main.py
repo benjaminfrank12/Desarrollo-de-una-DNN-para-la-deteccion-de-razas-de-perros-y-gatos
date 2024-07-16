@@ -257,6 +257,5 @@ def usar_camara():
         webrtc_streamer(key="example", video_transformer_factory=lambda: video_transformer,
                         rtc_configuration={"iceServers": [{"urls": ["stun:stun.l.google.com:19302"]}]})
 
-
 if __name__ == "__main__":
     main()
