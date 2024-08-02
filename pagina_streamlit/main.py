@@ -217,7 +217,7 @@ def subir_imagen():
         # Procesar la imagen y realizar anotaciones
         if model:
             with st.spinner('Procesando imagen...'):
-                col1, col2, col3 = st.columns([1, 1, 1])
+                col1, col2 = st.columns([1, 1])
                 results = asyncio.run(process_image(image, model, confidence_slider))
 
                 if results:
@@ -233,11 +233,11 @@ def subir_imagen():
                         detected_class = classes[idx]
                         detected_classes.add(detected_class)
 
-                        col3.markdown(
+                        col2.markdown(
                             f"<div style='background-color:#f0f0f0;padding:5px;border-radius:5px;margin:5px 0; color:black;'><b>Clase:</b> <span style='color:black'>{detected_class}</span><br><b>Confianza:</b> {confidence:.2f}<br></div>",
                             unsafe_allow_html=True)
                 else:
-                    col3.write("No se detectaron objetos.")
+                    col2.write("No se detectaron objetos.")
         else:
             st.error("Model is not loaded. Please check the logs for errors.")
     if change_text:
