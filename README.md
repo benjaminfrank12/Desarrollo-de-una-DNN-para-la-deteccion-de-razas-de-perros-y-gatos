@@ -26,3 +26,24 @@ A traves de un sitio web creada con Streamlit se puden cargar imagnes o tambien 
 - **Modelos:** Yolo V8
 - **Frontend:** HTML, CSS
 - **Entrenamiento del modelo:** JupyterLab
+
+---
+
+## 📸 Vistas del Proyecto
+
+### Página Principal
+Esta es la vista principal de la aplicación donde se pueden seleccionar las diferentes opciones.
+![Página Principal](img/Pagina_principal.jpg)
+
+### Detección de Imágenes
+Ejemplos de detección de razas en imágenes cargadas.
+
+**Detección de Perro:**
+![Detección de Perro](img/Deteccion_Perro.JPG)
+
+**Detección de Gato:**
+![Detección de Gato](img/Deteccion_Gato.JPG)
+
+### Detección en Tiempo Real
+Ejemplo de la detección funcionando en tiempo real mediante la cámara web.
+![Detección en Tiempo Real](img/Deteccion_tiempo_real.JPG)
